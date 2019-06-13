@@ -1,0 +1,256 @@
+<aura:component
+  controller="SL_ctrl_MergeAnything"
+  implements="forceCommunity:availableForAllPageTypes,force:hasRecordId,force:appHostable,force:lightningQuickActionWithoutHeader,flexipage:availableForAllPageTypes"
+  access="global"
+  extends="c:SL_GW_ShowToast"
+>
+  <aura:attribute name="recordId" type="String" />
+  <aura:attribute name="objApiName" type="String" />
+  <aura:attribute name="strForSearch" type="String" default="" />
+
+  <aura:attribute name="lstMarkedObj" type="List" />
+  <aura:attribute name="lstApiNameAndLabels" type="List" />
+  <aura:attribute name="lstSearchedObjects" type="List" />
+  <aura:attribute name="lstAllObjIdsWithoutMain" type="List" />
+  <aura:attribute name="allObjectNames" type="List" />
+  <aura:attribute name="mainObject" type="sObject[]" />
+  <aura:attribute name="headerItemsFromFieldSet" type="String[]" />
+  <aura:attribute name="headerItemsFromFieldSetWithLabels" type="List" />
+  <aura:attribute name="lstFieldsOfSurviedObject" type="List" />
+  <aura:attribute name="AllFieldsAndValuesWrapper" type="List" />
+  <aura:attribute name="lstReferenceFields" type="List" />
+
+  <aura:attribute name="selectedMergeOptions" type="String" default="remove" />
+  <aura:attribute
+    name="optionsMerge"
+    type="List"
+    default="[
+    {'label': 'Merge Children Records', 'value': 'merge'},
+    {'label': 'Remove Children Records', 'value': 'remove'}
+  ]"
+  />
+  <aura:attribute name="selectedMergeChatterOptions" type="String" default="remove" />
+  <aura:attribute
+    name="optionsMergeChatter"
+    type="List"
+    default="[
+    {'label': 'Merge Chatter Records', 'value': 'merge'},
+    {'label': 'Remove Chatter Records', 'value': 'remove'}
+  ]"
+  />
+
+  <aura:attribute name="selectedTabId" type="String" default="1" />
+  <aura:attribute name="firstStep" type="Boolean" default="false" />
+  <aura:attribute name="secondStep" type="Boolean" default="false" />
+  <aura:attribute name="thirdStep" type="Boolean" default="false" />
+  <aura:attribute name="isDisableNextStep" type="Boolean" default="true" />
+  <aura:attribute name="nextStepLabel" type="String" default="Next" />
+
+  <aura:attribute name="isChatterEnable" type="Boolean" default="false" />
+
+  <aura:attribute name="showSpinner" type="Boolean" default="false" />
+
+  <aura:attribute name="showComponent" type="Boolean" default="true" />
+
+  <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
+  <aura:handler name="change" value="{!v.objApiName}" action="{!c.findFieldSetValues}" />
+
+  <ltng:require styles="{!$Resource.popupCSS}" />
+
+  <aura:if isTrue="{!!v.showComponent}">
+    <lightning:button variant="neutral" label="Merge Objects" onclick="{!c.doInit}" />
+
+    <aura:set attribute="else">
+      <div class="mainObj" id="mainObjId">
+        <aura:if isTrue="{!v.showSpinner}">
+          <div class="" style="height: 6rem;">
+            <div role="status" class="slds-spinner slds-spinner_medium">
+              <span class="slds-assistive-text">Loading</span>
+              <div class="slds-spinner__dot-a"></div>
+              <div class="slds-spinner__dot-b"></div>
+            </div>
+          </div>
+
+          <aura:set attribute="else">
+            <aura:if isTrue="{!v.firstStep}">
+              <div class="header-class">
+                <div class="input-class">
+                  <lightning:layoutItem size="12" class="input-class">
+                    <lightning:input
+                      onchange="{!c.seachObjectByInputData}"
+                      aura:id="body"
+                      name="Body"
+                      placeholder="{! 'Enter name of ' + ' ' +  v.objApiName }"
+                      value="{!v.strForSearch}"
+                    />
+                  </lightning:layoutItem>
+                </div>
+                <div class="merge-class">
+                  <lightning:radioGroup
+                    name="radioGroup"
+                    label="Merge Children Objects"
+                    options="{! v.optionsMerge }"
+                    value="{! v.selectedMergeOptions}"
+                    type="radio"
+                    onchange="{! c.handleChangeOptionsMerge }"
+                  />
+                </div>
+                <aura:if isTrue="{!v.isChatterEnable}">
+                  <div>
+                    <lightning:radioGroup
+                      name="radioGroupChatter"
+                      label="Merge Chatter Posts"
+                      options="{! v.optionsMergeChatter }"
+                      value="{! v.selectedMergeChatterOptions}"
+                      type="radio"
+                      onchange="{! c.handleChangeChatterOptionsMerge }"
+                    />
+                  </div>
+                </aura:if>
+              </div>
+
+              <aura:if isTrue="{!v.lstSearchedObjects.length > 0}">
+                <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                  <thead>
+                    <tr class="slds-line-height_reset">
+                      <th></th>
+                      <aura:iteration items="{!v.headerItemsFromFieldSetWithLabels}" var="item">
+                        <th class="" scope="col">
+                          <span class="slds-truncate" title="{!item.label}">{!item.label}</span>
+                        </th>
+                      </aura:iteration>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <aura:iteration items="{!v.lstSearchedObjects}" var="record">
+                      <tr class="slds-line-height_reset">
+                        <lightning:input
+                          type="checkbox"
+                          aura:id="checkbox"
+                          value="{!record.recordId}"
+                          onchange="{!c.selectRecord}"
+                          checked="{!record.isChecked}"
+                        />
+                        <aura:iteration items="{!record.lstValuesAndLabel}" var="item">
+                          <th class="" scope="col">
+                            {!item.value}
+                          </th>
+                        </aura:iteration>
+                      </tr>
+                    </aura:iteration>
+                  </tbody>
+                </table>
+
+                <aura:set attribute="else">
+                  <div class="empty-search">There are no objects using search and no objects with the same name</div>
+                </aura:set>
+              </aura:if>
+            </aura:if>
+
+            <aura:if isTrue="{!v.secondStep}">
+              <div class="slds-truncate final-object">
+                <div class="slds-grid slds-gutters">
+                  <aura:iteration items="{!v.allObjectNames}" var="item">
+                    <div class="slds-col slds-size_3-of-12 slds-truncate headerItem-class">
+                      <span title="{!item}" class="header-value">{!item}</span>
+                    </div>
+                  </aura:iteration>
+                </div>
+                <hr class="hr" />
+                <aura:iteration items="{!v.AllFieldsAndValuesWrapper}" var="row">
+                  <div class="slds-grid slds-gutters">
+                    <div class="slds-col slds-size_3-of-12 slds-truncate">
+                      <span class="slds-truncate">{!row.title}</span>
+                    </div>
+                    <aura:iteration items="{!row.lstFields}" var="item">
+                      <lightning:input
+                        type="radio"
+                        id="{!item.objectId}"
+                        name="{!item.apinameField}"
+                        value="{!item.value}"
+                        checked="{!item.selected}"
+                        class="padding-checkbox"
+                        disabled="{! item.value == null || item.value ==''  }"
+                        onchange="{!c.changeRowValue}"
+                      />
+
+                      <aura:if isTrue="{!item.label != null}">
+                        <aura:if isTrue="{!item.type == 'DATETIME'}">
+                          <div class="slds-col slds-size_3-of-12 slds-truncate">
+                            <span class="slds-truncate">
+                              <ui:outputDateTime class="form-control" value="{!item.value}" />
+                            </span>
+                          </div>
+                          <aura:set attribute="else">
+                            <div class="slds-col slds-size_3-of-12 slds-truncate">
+                              <span class="slds-truncate">
+                                <ui:outputURL aura:id="url" label="{!item.label}" value="{!'/' + item.value}" target="_new" />
+                              </span>
+                            </div>
+                          </aura:set>
+                        </aura:if>
+                        <aura:set attribute="else">
+                          <div class="slds-col slds-size_3-of-12 slds-truncate">
+                            <span class="slds-truncate">{!item.value}</span>
+                          </div>
+                        </aura:set>
+                      </aura:if>
+                    </aura:iteration>
+                  </div>
+                  <hr class="hr" />
+                </aura:iteration>
+              </div>
+            </aura:if>
+
+            <aura:if isTrue="{!v.thirdStep}">
+              <div class="slds-truncate final-object">
+                <div class="header-third-page headerItem-class">Final survived object </div>
+                <div class="slds-grid slds-gutters">
+                  <div class="slds-col slds-size_3-of-12">
+                    <span class="header-value headerItem-class">Field Name</span>
+                  </div>
+                  <div class="slds-col slds-size_9-of-12">
+                    <span class="header-value headerItem-class">Value</span>
+                  </div>
+                </div>
+                <hr class="hr" />
+                <aura:iteration items="{!v.lstFieldsOfSurviedObject}" var="row">
+                  <div class="slds-grid slds-gutters">
+                    <div class="slds-col slds-size_3-of-12 slds-truncate">
+                      {!row.key}
+                    </div>
+                    <aura:if isTrue="{! row.fieldType == 'REFERENCE'}">
+                      <div class="slds-col slds-size_9-of-12 slds-truncate">
+                        <ui:outputURL aura:id="url" label="{!row.nameOfReffernece}" value="{!'/' + row.value}" target="_new" />
+                      </div>
+                      <aura:set attribute="else">
+                        <div class="slds-col slds-size_9-of-12 slds-truncate">
+                          {!row.value}
+                        </div>
+                      </aura:set>
+                    </aura:if>
+                  </div>
+                  <hr class="hr" />
+                </aura:iteration>
+              </div>
+            </aura:if>
+          </aura:set>
+        </aura:if>
+      </div>
+
+      <aura:if isTrue="{!v.showSpinner == false}">
+        <div>
+          <div class="slds-float_right pagination-button">
+            <lightning:button aura:id="nextButton" disabled="{! v.isDisableNextStep }" variant="brand" label="{!v.nextStepLabel}" onclick="{!c.next}" />
+          </div>
+
+          <aura:if isTrue="{!v.selectedTabId != '1'}">
+            <div class="slds-float_right pagination-button">
+              <lightning:button disabled="{!v.selectedTabId == '1'}" variant="neutral" label="Previous" onclick="{!c.back}" />
+            </div>
+          </aura:if>
+        </div>
+      </aura:if>
+    </aura:set>
+  </aura:if>
+</aura:component>

@@ -1,0 +1,57 @@
+.THIS .input-class {
+    display: flex !important;
+    justify-content: center !important;
+    margin-bottom: 1rem !important;
+}
+
+.THIS .slds-button {
+    width: 80px !important;
+}
+
+.THIS .pagination-button {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 3rem;
+    margin-right: 1rem;
+}
+
+.THIS .empty-search {
+    display: flex;
+    justify-content: center;
+    margin: 8rem;
+}
+
+.THIS .final-object {
+    margin-inline-end: 10px;
+}
+
+.THIS .header-class {
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.THIS .hr {
+    margin: 0 !important;
+}
+
+.THIS .slds-col {
+    padding-left: 1.75rem !important;
+}
+
+.THIS .merge-class {
+    margin-left: 4rem;
+    margin-right: -3rem;
+}
+
+.THIS .headerItem-class {
+    color: rgb(81, 79, 77);
+    font-weight: 700;
+    line-height: normal;
+}
+
+.THIS .header-third-page {
+    display: flex;
+    justify-content: center;
+    line-height: 1rem;
+    font-size: 1rem;
+}

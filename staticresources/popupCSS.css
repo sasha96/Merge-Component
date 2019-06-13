@@ -1,0 +1,10 @@
+.slds-modal__container {
+    max-width: 1000px !important;
+    width: 1000px !important;
+}
+
+
+.mainObj {
+    max-height: 400px;
+    overflow-y: auto;
+}
